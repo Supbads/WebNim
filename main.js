@@ -1,45 +1,34 @@
-
-
+let canvasX = 800;
+let canvasY = 400;
 
 function setup() {
     createCanvas(800, 400);
-    drawBackground();
 
-    this.game = new NimGame();
+    this.nimAi = new NimAI();
+    this.game = new NimGame(nimAi);
     this.game.setupGameBoard();
+    this.game.redrawButtons();
 
     for (var i = 1; i < 20; i++) {
-        let asd = 5;
+        let asd = 5; // test level generations
     }
-
-
 }
 
 function draw() {
+    drawBackground();
     this.game.draw();
-    // write some text
-    // e.g. menu
-
-    // you start or ai starts
-    // check ai vs ai option ?
-
-    // most of the game will go to setup
-
-
-    // get mouse clicks - check if dot is clicked
-    // add hover for nim dots
-
 
 }
-
 
 function mouseClicked() {
     console.log("X: " + mouseX);
     console.log("Y: " + mouseY);
 
-    let success = this.game.popDot(mouseX, mouseY);
-    if (success) {
-        drawBackground();
+    if (mouseX >= 0 && mouseX < canvasX && mouseY >= 0 && mouseY < canvasY) {
+        let popped = this.game.popDot(mouseX, mouseY);
+        if (popped) {
+            this.game.redrawButtons();
+        }
     }
 }
 

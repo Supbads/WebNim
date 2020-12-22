@@ -12,8 +12,10 @@ class NimDot {
     }
 
     draw() {
-        if (this.isActive)
+        if (this.isActive) {
+            fill(color(0, 0, 255));
             circle(this.x, this.y, dotDiameter);
+        }
 
         //else {
         //    erase(220);

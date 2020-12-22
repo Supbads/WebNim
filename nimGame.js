@@ -4,19 +4,28 @@ const scaleItemsX = 40;
 const scaleItemsY = 55;
 
 class NimGame {
-    constructor() {
+    constructor(nimAI) {
+        nimAI.attachGame(this);
+        this.nimAI = nimAI;
+        this.versusAi = true;
         this.playerTurn = true;
+        // encapsulate competitors logic in a competitor object
+
         this.gameStarted = false;
-        this.isFirstRound = false;
-        this.selectedRow = -1;
+        this.isFirstTurn = false;
         this.level = 1;
         this.hasPoppedThisTurn = false;
+        this.poppedRowThisTurn = -1;
         this.gameBoard = [];
 
+        this.startGame = this.startGame.bind(this);
+        this.endTurn = this.endTurn.bind(this);
+        this.skipTurn = this.skipTurn.bind(this);
+        this.giveUp = this.giveUp.bind(this);
     }
     
     setupGameBoard(levelNum) {
-        if (levelNum) {st
+        if (levelNum) {
             this.level = levelNum;
         }
         let level = this.level;
@@ -36,6 +45,7 @@ class NimGame {
             let baseMax2 = 1 + row + (level / levelScale);
 
             let descaleWithRows = (Math.pow(1.2, rows));
+            // todo proper logic
             // todo descale with rows
 
             let random = Math.random() * (baseMax2 - baseMin) + baseMin;
@@ -60,82 +70,61 @@ class NimGame {
         for (var i = 0; i < this.gameBoard.length; i++) {
             result.push(this.gameBoard[i].length);
         }
-
-        console.log("getDotsResult: ");
-        console.log(result);
     }
 
     progress() {
         this.level++;
         this.setupGameBoard();
-
-
-    }
-
-    redrawButtons() {
-        const buttonsOffset = 8;
-        const buttonsSpacing = 5;
-        const buttonsY = 55;
-        let currentOffset = buttonsOffset;
-        
-        if (!this.gameStarted) {
-            // todo start game also by popping a dot
-
-            this.startButton = createButton('Start');
-            this.startButton.position(8, 55);
-            this.startButton.mousePressed(this.startGame);
-
-            currentOffset = this.startButton.x + this.startButton.width + buttonsSpacing;
-        }
-        else if (this.gameStarted && this.isFirstRound) {
-            // only when started, only the first round
-            this.aiFirst = createButton('Skip');
-            this.aiFirst.position(currentOffset, buttonsY);
-            this.aiFirst.mousePressed(this.skipTurn);
-
-            currentOffset = this.aiFirst.x + this.aiFirst.width + buttonsSpacing;
-        }
-        else if (this.gameStarted && !this.isFirstRound) {
-            this.giveUp = createButton('Give up');
-            this.giveUp.position(currentOffset, buttonsY);
-            this.giveUp.mousePressed(this.giveUp);
-
-            currentOffset = this.giveUp.x + this.giveUp.width + buttonsSpacing;
-        }
-
-        // has popped something
-        if (this.gameStarted && this.hasPoppedThisTurn) {
-            this.endTurn = createButton('End Turn');
-            this.endTurn.position(currentOffset, buttonsY);
-            this.endTurn.mousePressed(this.finishTurn);
-
-            currentOffset = this.endTurn.x + this.endTurn.width + buttonsSpacing;
-        }
-
-        //these checks may be removed using a lastElement reference
     }
 
     startGame() {
         this.playerTurn = true;
         this.gameStarted = true;
-        this.isFirstRound = true;
+        this.isFirstTurn = true;
         this.hasPoppedThisTurn = false;
-        this.selectedRow = -1;
+        this.poppedRowThisTurn = -1;
 
         console.log('start');
+        this.redrawButtons();
     }
 
     giveUp() {
         console.log("skipaj");
     }
 
-    finishTurn() {
-        console.log("finishing turn");
+    endTurn() {
+        this.isFirstTurn = false;
+        this.hasPoppedThisTurn = false;
+        this.poppedRowThisTurn = -1;
 
+        if (this.playerTurn && this.versusAi) {
+            this.playerTurn = false;
+
+            // move to a game manager
+            this.nimAI.pop();
+        }
+
+        if (!this.playerTurn && this.versusAi) {
+            this.playerTurn = true;
+
+            // todo competitors
+        }
+
+        redrawButtons();
+        console.log("finishing turn");
+    }
+
+    skipTurn() {
+        if (this.isFirstTurn && this.versusAi) {
+            console.log("skipping");
+            this.endTurn();
+        }
+        else { //todo cannot skip in pvp
+            console.log("cannot skip");
+        }
     }
 
     popDot(x, y) {
-
         // itterate rows in reverse - check if the cursor is popping an object
         if (!this.playerTurn) {
             return false;
@@ -182,29 +171,26 @@ class NimGame {
     }
 
     flagDot(i, j) {
+        if (this.hasPoppedThisTurn && i !== this.poppedRowThisTurn) {
+            console.log('Cannot pop from another row once selected');
+            return;
+        }
+
         if (this.gameBoard[i] && this.gameBoard[i][j]) {
             let dot = this.gameBoard[i][j];
             console.log('poppingDot:');
             console.log(dot);
             dot.pop();
 
+            this.isFirstTurn = false;
             this.hasPoppedThisTurn = true;
-            // todo add to cleanup
-        }
-    }
-
-    skipTurn() {
-        if (this.isFirstRound) {
-            console.log("skipaj");
-        }
-        else {
-            console.log("noSkipaj");
+            this.poppedRowThisTurn = i;
         }
     }
 
     draw() {
-        redraw();
-        this.redrawButtons(); // shouldn't be here rly
+
+        //this.redrawButtons(); // shouldn't be here rly
         
         for (var i = 0; i < this.gameBoard.length; i++) {
             for (var j = 0; j < this.gameBoard[i].length; j++) {
@@ -215,5 +201,51 @@ class NimGame {
 
         // clean up inactive dots
         //this.gameBoard[rowIndex].splice(removedIndex, 1);
+    }
+
+    redrawButtons() {
+        console.log("redrawing buttons");
+        removeElements();
+        const buttonsOffset = 8;
+        const buttonsSpacing = 5;
+        const buttonsY = 55;
+        let currentOffset = buttonsOffset;
+
+        if (!this.gameStarted) {
+            // todo start game also by popping a dot
+
+            this.startButton = createButton('Start');
+            this.startButton.position(8, 55);
+            this.startButton.mousePressed(this.startGame);
+            
+            currentOffset = this.startButton.x + this.startButton.width + buttonsSpacing;
+        }
+
+        if (this.gameStarted && this.isFirstTurn) {
+            // only when started, only the first round
+            this.aiFirstButton = createButton('Skip');
+            this.aiFirstButton.position(currentOffset, buttonsY);
+            this.aiFirstButton.mousePressed(this.skipTurn);
+
+            currentOffset = this.aiFirstButton.x + this.aiFirstButton.width + buttonsSpacing;
+        }
+
+        if (this.gameStarted && this.hasPoppedThisTurn) {
+            this.endTurnButton = createButton('End Turn');
+            this.endTurnButton.position(currentOffset, buttonsY);
+            this.endTurnButton.mousePressed(this.endTurn);
+
+            currentOffset = this.endTurnButton.x + this.endTurnButton.width + buttonsSpacing;
+        }
+
+        if (this.gameStarted) {
+            this.giveUpButton = createButton('Give up');
+            this.giveUpButton.position(currentOffset, buttonsY);
+            this.giveUpButton.mousePressed(this.giveUp);
+
+            currentOffset = this.giveUpButton.x + this.giveUpButton.width + buttonsSpacing;
+        }
+
+        //these checks may be removed using a lastElement reference
     }
 }
