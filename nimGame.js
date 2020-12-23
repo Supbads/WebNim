@@ -70,6 +70,8 @@ class NimGame {
         for (var i = 0; i < this.gameBoard.length; i++) {
             result.push(this.gameBoard[i].length);
         }
+
+        return result;
     }
 
     progress() {
@@ -110,8 +112,9 @@ class NimGame {
             // todo competitors
         }
 
-        redrawButtons();
+        this.redrawButtons();
         console.log("finishing turn");
+        // todo add function to check if the game is over
     }
 
     skipTurn() {
@@ -181,6 +184,7 @@ class NimGame {
             console.log('poppingDot:');
             console.log(dot);
             dot.pop();
+            this.gameBoard[i].splice(j, 1);
 
             this.isFirstTurn = false;
             this.hasPoppedThisTurn = true;
@@ -188,10 +192,7 @@ class NimGame {
         }
     }
 
-    draw() {
-
-        //this.redrawButtons(); // shouldn't be here rly
-        
+    draw() {        
         for (var i = 0; i < this.gameBoard.length; i++) {
             for (var j = 0; j < this.gameBoard[i].length; j++) {
                 let dot = this.gameBoard[i][j];
@@ -212,8 +213,6 @@ class NimGame {
         let currentOffset = buttonsOffset;
 
         if (!this.gameStarted) {
-            // todo start game also by popping a dot
-
             this.startButton = createButton('Start');
             this.startButton.position(8, 55);
             this.startButton.mousePressed(this.startGame);
@@ -222,7 +221,6 @@ class NimGame {
         }
 
         if (this.gameStarted && this.isFirstTurn) {
-            // only when started, only the first round
             this.aiFirstButton = createButton('Skip');
             this.aiFirstButton.position(currentOffset, buttonsY);
             this.aiFirstButton.mousePressed(this.skipTurn);
