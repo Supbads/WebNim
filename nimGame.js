@@ -18,6 +18,8 @@ class NimGame {
         }
 
         this.initFlags();
+        // display text e.g. winner/losers
+        // todo -> manager for game modes/pvp and ai players/buttons/custom levels and other logic
         // todo move competitors logic in a competitor object
         // todo add standard mode e.g. objective is to take the last one
 
@@ -60,10 +62,6 @@ class NimGame {
             let baseMin = Math.random() * (rows - 1) + 1;
             let levelScale = Math.pow(0.96, level * 2);
             let baseMax2 = 1 + row + (level / levelScale);
-
-            let descaleWithRows = (Math.pow(1.2, rows));
-            // todo proper logic
-            // todo descale with rows
 
             let random = Math.random() * (baseMax2 - baseMin) + baseMin;
             let dotsToGenerate = random;
@@ -140,15 +138,13 @@ class NimGame {
         this.gameEnded = true;
         this.playerWon = !this.playerTurn;
 
-        // loser is whoever turn it is
+        // loser is whoever turn it is in misere game mode
         console.log("game over");
-        // todo proper gameover screen
+        // todo: gameover screen
         if (this.playerWon) {
             console.log("player won");
         } else {
             console.log("player lost");
-
-
         }
     }
 
@@ -157,14 +153,20 @@ class NimGame {
             console.log("skipping");
             this.endTurn();
         }
-        else { //todo cannot skip in pvp
+        else { //todo cannot skip in pvp 
+            // or logic to draw if both skip + each person has a skip
             console.log("cannot skip");
         }
     }
 
     nextLevel() {
         this.initFlags();
-        this.level++;
+        if (this.level < 17) {
+            this.level++;
+        }
+        else {
+            console.log("max level is 17");
+        }
         this.redrawButtons();
         this.setupGameBoard();
     }
@@ -192,7 +194,6 @@ class NimGame {
         });
 
         if (rowIndex === -1) {
-            console.log('no dot at the given coordinates');
             return;
         }
 
@@ -209,7 +210,8 @@ class NimGame {
                 removedIndex = i;
                 break;
             }
-            else if (dot.x > x) {// check if mouseX is to the right -> skip calc
+            else if (dot.x < x) {
+                // skip calc if x is to the right
                 break;
             }
             
@@ -220,9 +222,6 @@ class NimGame {
                 this.startGame();
             }
             this.flagDot(rowIndex, removedIndex);
-        }
-        else {
-            console.log('no dot at the given coordinates');
         }
 
         if (this.hasTheGameEnded()) {
@@ -260,7 +259,7 @@ class NimGame {
         }
     }
 
-    redrawButtons() {
+    redrawButtons() { //manager
         console.log("redrawing buttons");
         removeElements();
         const buttonsOffset = 8;
