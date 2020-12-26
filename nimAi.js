@@ -15,13 +15,7 @@ class NimAI {
             this.caseSingleDotsRow(board);
         }
         else if (this.areSingleDotRowsLeft(board)) { // check if board has only 1s left -> take any
-            
-
-            for (var i = 0; i < board.length; i++) {
-                if (board[i] > 0) {
-                    this.nimGame.flagDot(i, 0);
-                }
-            }
+            this.takeOneDotFromAnyRow(board)
         }
         else {
             this.standardSituation(board);
@@ -106,6 +100,22 @@ class NimAI {
                 this.nimGame.flagDot(targetRow, i);
                 dotsToPop--;
             }
+
+            board = this.nimGame.getDots();
+            if (this.areSingleDotRowsLeft(board)) {
+                let singles = 0;
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] > 0) {
+                        singles++;
+                    }
+                }
+
+                if (singles % 2 === 0) {
+                    this.takeOneDotFromAnyRow(board);
+                }                
+            }
+
+
         }
         else { // losing position
             let maxDotsToPop = Math.min(maxRowDots, 4);
@@ -114,6 +124,14 @@ class NimAI {
             for (var i = maxRowDots - 1; dotsToPop > 0; i--) {
                 this.nimGame.flagDot(maxIdx, i);
                 dotsToPop--;
+            }
+        }
+    }
+
+    takeOneDotFromAnyRow(board) {
+        for (var i = 0; i < board.length; i++) {
+            if (board[i] > 0) {
+                this.nimGame.flagDot(i, 0);
             }
         }
     }
