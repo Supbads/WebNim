@@ -10,63 +10,27 @@ class NimAI {
 
     pop() {
         let board = this.nimGame.getDots();
-
-        console.log("getDotsResult: ");
-        console.log(board);
-
-        // check if there's only one row
-        // if row == 1
-        if (this.singleDotsRow(board)) {
-            let rowIndex = -1;
-            let rowDots = -1;
-
-            for (let i = 0; i < board.length; i++) {
-                if (board[i] > 0) {
-                    rowIndex = i;
-                    rowDots = rowDots[i];
-                }
-            }
-
-            if (rowDots > 1) { // winning -> remove all but 1
-                let dotsToPop = rowDots - 1;
-                
-                let row = board[rowIndex];
-                for (let i = row.length; dotsToPop > 0; i--) {
-                    if (row[i]) {
-                        nimGame.flagDot(rowIndex, i);
-                        dotsToPop--;
-                    }
-                }
-            } else { // losing -> remove the last one
-                this.nimGame.flagDot(rowIndex, 1);
-            }
-        }
-
-        // check if board has only 1s left -> take any
-
-        let xorRes = 0;
-        for (var i = 0; i < board.length; i++) {
-            let currentRow = board[i];
-            xorRes = xorRes ^ currentRow;
-        }
         
-        console.log("Xor: " + xorRes);
+        if (this.isSingleDotsRow(board)) {
+            this.caseSingleDotsRow(board);
+        }
+        else if (this.areSingleDotRowsLeft(board)) { // check if board has only 1s left -> take any
+            
 
-        if (xorRes !== 0) {
-            // winning position
-
+            for (var i = 0; i < board.length; i++) {
+                if (board[i] > 0) {
+                    this.nimGame.flagDot(i, 0);
+                }
+            }
         }
         else {
-            // losing position
-            // take from the biggest row 1 - 3 (Math.max(row,3))
-
-
+            this.standardSituation(board);
         }
-        //determine if the position is winnin or losing        
 
+        this.nimGame.endTurn();
     }
 
-    singleDotsRow(board) {
+    isSingleDotsRow(board) {
         let rowsWithData = 0;
 
         for (var i = 0; i < board.length; i++) {
@@ -77,4 +41,80 @@ class NimAI {
         return rowsWithData === 1;
     }
 
+    caseSingleDotsRow(board) {
+        let rowIndex = -1;
+        let rowDots = -1; 
+
+        for (let i = 0; i < board.length; i++) {
+            if (board[i] > 0) {
+                rowIndex = i;
+                rowDots = board[i];
+                break;
+            }
+        }
+
+        if (rowDots > 1) { // winning -> remove all but 1
+            for (let i = rowDots - 1; i > 0; i--) {
+                this.nimGame.flagDot(rowIndex, i); //todo find a way to make this non instant
+            }
+        } else { // losing -> remove the last one
+            this.nimGame.flagDot(rowIndex, 0);
+        }
+    }
+    
+    areSingleDotRowsLeft(board) {
+        for (let i = 0; i < board.length; i++) {
+            if (board[i] > 1) {
+                return false;
+            }
+
+        }
+
+        return true;
+    }
+
+    standardSituation(board) {
+        let xorRes = 0;
+        let maxRowDots = 0;
+        let maxIdx = -1;
+        for (let i = 0; i < board.length; i++) {
+            let currentRow = board[i];
+            xorRes = xorRes ^ currentRow;
+            
+            if (maxRowDots < currentRow) {
+                maxRowDots = currentRow;
+                maxIdx = i;
+            }
+        }
+
+        if (xorRes !== 0) { // winning position
+            let xorRows = board.map(r => r ^ xorRes);
+            let targetRow = -1;
+            let dotsToPop = -1;
+
+            for (let i = 0; i < xorRows.length; i++) {
+                let xorRow = xorRows[i];
+                let rowDots = board[i];
+                if (xorRow < rowDots) {
+                    dotsToPop = rowDots - xorRow;
+                    targetRow = i;
+                    break;
+                }
+            }
+
+            for (let i = board[targetRow] - 1; dotsToPop > 0; i--) {
+                this.nimGame.flagDot(targetRow, i);
+                dotsToPop--;
+            }
+        }
+        else { // losing position
+            let maxDotsToPop = Math.min(maxRowDots, 4);
+            let dotsToPop = Math.random() * (maxDotsToPop - 1) + 1;
+
+            for (var i = maxRowDots - 1; dotsToPop > 0; i--) {
+                this.nimGame.flagDot(maxIdx, i);
+                dotsToPop--;
+            }
+        }
+    }
 }

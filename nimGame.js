@@ -4,26 +4,42 @@ const scaleItemsX = 40;
 const scaleItemsY = 55;
 
 class NimGame {
-    constructor(nimAI) {
-        nimAI.attachGame(this);
+    constructor(nimAI, level) {
         this.nimAI = nimAI;
+        nimAI.attachGame(this);
         this.versusAi = true;
-        this.playerTurn = true;
-        // encapsulate competitors logic in a competitor object
 
-        this.gameStarted = false;
-        this.isFirstTurn = false;
-        this.level = 1;
-        this.hasPoppedThisTurn = false;
-        this.poppedRowThisTurn = -1;
-        this.gameBoard = [];
+        if (level && typeof(level) === 'number')
+        {
+            this.level = level; 
+        }
+        else {
+            this.level = 4;
+        }
+
+        this.initFlags();
+        // todo move competitors logic in a competitor object
+        // todo add standard mode e.g. objective is to take the last one
 
         this.startGame = this.startGame.bind(this);
         this.endTurn = this.endTurn.bind(this);
         this.skipTurn = this.skipTurn.bind(this);
-        this.giveUp = this.giveUp.bind(this);
+        this.newBoard = this.giveUp.bind(this);
+        this.nextLevel = this.nextLevel.bind(this);
+        this.newGame = this.newGame.bind(this);
     }
-    
+
+    initFlags() {
+        this.playerWon = false;
+        this.gameEnded = false;
+        this.playerTurn = true;
+        this.gameStarted = false;
+        this.isFirstTurn = false;
+        this.hasPoppedThisTurn = false;
+        this.poppedRowThisTurn = -1;
+        this.gameBoard = [];
+    }
+
     setupGameBoard(levelNum) {
         if (levelNum) {
             this.level = levelNum;
@@ -38,10 +54,11 @@ class NimGame {
         }
 
         this.gameBoard.length = 0;
-        for (var row = 0; row < rows; row++) {
+        for (let row = 0; row < rows; row++) {
             this.gameBoard[row] = [];
-            let baseMin = 1 + row + Math.ceil(level / 3);
-            let levelScale = Math.pow(0.96, level);
+
+            let baseMin = Math.random() * (rows - 1) + 1;
+            let levelScale = Math.pow(0.96, level * 2);
             let baseMax2 = 1 + row + (level / levelScale);
 
             let descaleWithRows = (Math.pow(1.2, rows));
@@ -57,11 +74,6 @@ class NimGame {
                 this.gameBoard[row].push(new NimDot(dotX, dotY));
             }
         }
-
-        console.log('level ' + level);
-        console.log('rows ' + rows);
-        console.log(this.gameBoard);
-        this.getDots();
     }
 
     getDots() {
@@ -74,24 +86,17 @@ class NimGame {
         return result;
     }
 
-    progress() {
-        this.level++;
-        this.setupGameBoard();
-    }
-
-    startGame() {
-        this.playerTurn = true;
+    startGame() { // game manager
         this.gameStarted = true;
         this.isFirstTurn = true;
         this.hasPoppedThisTurn = false;
         this.poppedRowThisTurn = -1;
-
-        console.log('start');
+        
         this.redrawButtons();
     }
 
     giveUp() {
-        console.log("skipaj");
+        // for pvp
     }
 
     endTurn() {
@@ -99,9 +104,14 @@ class NimGame {
         this.hasPoppedThisTurn = false;
         this.poppedRowThisTurn = -1;
 
+        if (this.hasTheGameEnded()) {
+            this.finishGame();
+            return;
+        }
+
         if (this.playerTurn && this.versusAi) {
             this.playerTurn = false;
-
+            
             // move to a game manager
             this.nimAI.pop();
         }
@@ -113,8 +123,33 @@ class NimGame {
         }
 
         this.redrawButtons();
-        console.log("finishing turn");
-        // todo add function to check if the game is over
+    }
+
+    hasTheGameEnded() {
+        let board = this.getDots();
+        for (var i = 0; i < board.length; i++) {
+            if (board[i] > 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    finishGame() { // todo gama manager
+        this.gameEnded = true;
+        this.playerWon = !this.playerTurn;
+
+        // loser is whoever turn it is
+        console.log("game over");
+        // todo proper gameover screen
+        if (this.playerWon) {
+            console.log("player won");
+        } else {
+            console.log("player lost");
+
+
+        }
     }
 
     skipTurn() {
@@ -127,8 +162,20 @@ class NimGame {
         }
     }
 
+    nextLevel() {
+        this.initFlags();
+        this.level++;
+        this.redrawButtons();
+        this.setupGameBoard();
+    }
+
+    newGame() {
+        this.initFlags();
+        this.redrawButtons();
+        this.setupGameBoard();
+    }
+
     popDot(x, y) {
-        // itterate rows in reverse - check if the cursor is popping an object
         if (!this.playerTurn) {
             return false;
         }
@@ -137,13 +184,16 @@ class NimGame {
 
         // the dot's Y is the center => 
         let rowIndex = this.gameBoard.findIndex(row => {
+            if (row.length === 0) {
+                return false;
+            }
             let dot = row[0];
             return y >= (dot.y - dotRadius) && y <= (dot.y + dotRadius);
         });
 
         if (rowIndex === -1) {
-            console.log('oof');
-            return false;
+            console.log('no dot at the given coordinates');
+            return;
         }
 
         let correctRow = this.gameBoard[rowIndex];
@@ -159,7 +209,10 @@ class NimGame {
                 removedIndex = i;
                 break;
             }
-            // check if x is to the right  -> to skip calc
+            else if (dot.x > x) {// check if mouseX is to the right -> skip calc
+                break;
+            }
+            
         }
         
         if (removedIndex !== -1) {
@@ -167,10 +220,14 @@ class NimGame {
                 this.startGame();
             }
             this.flagDot(rowIndex, removedIndex);
-            return true;
+        }
+        else {
+            console.log('no dot at the given coordinates');
         }
 
-        return false;
+        if (this.hasTheGameEnded()) {
+            this.finishGame();
+        }
     }
 
     flagDot(i, j) {
@@ -189,6 +246,8 @@ class NimGame {
             this.isFirstTurn = false;
             this.hasPoppedThisTurn = true;
             this.poppedRowThisTurn = i;
+
+            this.redrawButtons();
         }
     }
 
@@ -199,25 +258,22 @@ class NimGame {
                     dot.draw();
             }
         }
-
-        // clean up inactive dots
-        //this.gameBoard[rowIndex].splice(removedIndex, 1);
     }
 
     redrawButtons() {
         console.log("redrawing buttons");
         removeElements();
         const buttonsOffset = 8;
-        const buttonsSpacing = 5;
+        
         const buttonsY = 55;
         let currentOffset = buttonsOffset;
 
         if (!this.gameStarted) {
             this.startButton = createButton('Start');
-            this.startButton.position(8, 55);
+            this.startButton.position(currentOffset, 55);
             this.startButton.mousePressed(this.startGame);
             
-            currentOffset = this.startButton.x + this.startButton.width + buttonsSpacing;
+            currentOffset = this.calculateButtonOffset(this.startButton);
         }
 
         if (this.gameStarted && this.isFirstTurn) {
@@ -225,25 +281,49 @@ class NimGame {
             this.aiFirstButton.position(currentOffset, buttonsY);
             this.aiFirstButton.mousePressed(this.skipTurn);
 
-            currentOffset = this.aiFirstButton.x + this.aiFirstButton.width + buttonsSpacing;
+            currentOffset = this.calculateButtonOffset(this.aiFirstButton);
         }
+        
+        this.newGameButton = createButton('New game');
+        this.newGameButton.position(currentOffset, buttonsY);
+        this.newGameButton.mousePressed(this.newGame);
+
+        currentOffset = this.calculateButtonOffset(this.newGameButton);
+        
 
         if (this.gameStarted && this.hasPoppedThisTurn) {
             this.endTurnButton = createButton('End Turn');
             this.endTurnButton.position(currentOffset, buttonsY);
             this.endTurnButton.mousePressed(this.endTurn);
 
-            currentOffset = this.endTurnButton.x + this.endTurnButton.width + buttonsSpacing;
+            currentOffset = this.calculateButtonOffset(this.endTurnButton);
         }
 
-        if (this.gameStarted) {
-            this.giveUpButton = createButton('Give up');
-            this.giveUpButton.position(currentOffset, buttonsY);
-            this.giveUpButton.mousePressed(this.giveUp);
+        this.nextLevelButton = createButton('Next Level');
+        this.nextLevelButton.position(currentOffset, buttonsY);
+        this.nextLevelButton.mousePressed(this.nextLevel);
 
-            currentOffset = this.giveUpButton.x + this.giveUpButton.width + buttonsSpacing;
+        currentOffset = this.calculateButtonOffset(this.nextLevelButton);
+
+        if (this.gameEnded && this.playerWon) {
+            this.nextLevelButton = createButton('Next Level');
+            this.nextLevelButton.position(currentOffset, buttonsY);
+            this.nextLevelButton.mousePressed(this.nextLevel);
+
+            currentOffset = this.calculateButtonOffset(this.nextLevelButton);
         }
+        else if (this.gameEnded && !this.playerWon) {
+            this.tryAgainButton = createButton('Try again');
+            this.tryAgainButton.position(currentOffset, buttonsY);
+            this.tryAgainButton.mousePressed(this.tryAgain);
 
-        //these checks may be removed using a lastElement reference
+            currentOffset = this.calculateButtonOffset(this.tryAgainButton);
+        }
+    }
+
+    calculateButtonOffset(btn) {
+        const buttonsSpacing = 5;
+
+        return btn.x + btn.width + buttonsSpacing;
     }
 }

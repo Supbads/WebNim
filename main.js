@@ -1,17 +1,13 @@
-let canvasX = 800;
+let canvasX = 1200;
 let canvasY = 400;
 
 function setup() {
-    createCanvas(800, 400);
+    createCanvas(canvasX, canvasY);
 
     this.nimAi = new NimAI();
     this.game = new NimGame(nimAi);
     this.game.setupGameBoard();
     this.game.redrawButtons();
-
-    for (var i = 1; i < 20; i++) {
-        let asd = 5; // test level generations
-    }
 }
 
 function draw() {
@@ -20,19 +16,17 @@ function draw() {
 
 }
 
-function mouseClicked() {
-    console.log("X: " + mouseX);
-    console.log("Y: " + mouseY);
+function drawBackground() {
+    clear();
+    background(200);
 
-    if (mouseX >= 0 && mouseX < canvasX && mouseY >= 0 && mouseY < canvasY) {
-        let popped = this.game.popDot(mouseX, mouseY);
-        if (popped) {
-            this.game.redrawButtons();
-        }
+}
+
+function mouseClicked() {
+    if (mouseX >= 0 && mouseX < canvasX &&
+        mouseY >= 0 && mouseY < canvasY) {
+        this.game.popDot(mouseX, mouseY);
     }
 }
 
-function drawBackground() {
-    clear();
-    background(220);
-}
+// todo: hover for players
