@@ -19,7 +19,8 @@ class NimGame {
 
         this.initFlags();
         // display text e.g. winner/losers
-        // todo -> manager for game modes/pvp and ai players/buttons/custom levels and other logic
+        // todo: flagged dots animations ?
+        // todo: -> manager for game modes/pvp and ai players/buttons/custom levels and other logica
         // todo move competitors logic in a competitor object
         // todo add standard mode e.g. objective is to take the last one
 
@@ -231,14 +232,11 @@ class NimGame {
 
     flagDot(i, j) {
         if (this.hasPoppedThisTurn && i !== this.poppedRowThisTurn) {
-            console.log('Cannot pop from another row once selected');
             return;
         }
 
         if (this.gameBoard[i] && this.gameBoard[i][j]) {
             let dot = this.gameBoard[i][j];
-            console.log('poppingDot:');
-            console.log(dot);
             dot.pop();
             this.gameBoard[i].splice(j, 1);
 
@@ -297,12 +295,6 @@ class NimGame {
 
             currentOffset = this.calculateButtonOffset(this.endTurnButton);
         }
-
-        this.nextLevelButton = createButton('Next Level');
-        this.nextLevelButton.position(currentOffset, buttonsY);
-        this.nextLevelButton.mousePressed(this.nextLevel);
-
-        currentOffset = this.calculateButtonOffset(this.nextLevelButton);
 
         if (this.gameEnded && this.playerWon) {
             this.nextLevelButton = createButton('Next Level');
