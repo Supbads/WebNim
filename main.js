@@ -1,5 +1,5 @@
-let canvasX = 1200;
-let canvasY = 400;
+let canvasX = 1200 * (scale /1.5);
+let canvasY = 400 * scale;
 
 function setup() {
     createCanvas(canvasX, canvasY);

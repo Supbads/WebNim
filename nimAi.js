@@ -14,7 +14,7 @@ class NimAI {
         if (this.isSingleDotsRow(board)) {
             this.caseSingleDotsRow(board);
         }
-        else if (this.areSingleDotRowsLeft(board)) { // check if board has only 1s left -> take any
+        else if (this.areOnlySingleDotRowsLeft(board)) { // check if board has only 1s left -> take any
             this.takeOneDotFromAnyRow(board)
         }
         else {
@@ -56,12 +56,11 @@ class NimAI {
         }
     }
     
-    areSingleDotRowsLeft(board) {
+    areOnlySingleDotRowsLeft(board) {
         for (let i = 0; i < board.length; i++) {
             if (board[i] > 1) {
                 return false;
             }
-
         }
 
         return true;
@@ -102,7 +101,7 @@ class NimAI {
             }
 
             board = this.nimGame.getDots();
-            if (this.areSingleDotRowsLeft(board)) {
+            if (this.areOnlySingleDotRowsLeft(board)) {
                 let singles = 0;
                 for (let i = 0; i < board.length; i++) {
                     if (board[i] > 0) {
@@ -112,7 +111,7 @@ class NimAI {
 
                 if (singles % 2 === 0) {
                     this.takeOneDotFromAnyRow(board);
-                }                
+                }
             }
 
 

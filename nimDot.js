@@ -1,4 +1,4 @@
-const dotDiameter = 50;
+const dotDiameter = 50 * scale;
 
 class NimDot {
     constructor(x, y, r) {

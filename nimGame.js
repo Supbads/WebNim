@@ -1,7 +1,9 @@
-const itemsOffsetX = 30;
-const itemsOffsetY = 40;
-const scaleItemsX = 40;
-const scaleItemsY = 55;
+const scale = 2;
+
+const itemsOffsetX = 30 * scale;
+const itemsOffsetY = 40 * scale;
+const scaleItemsX = 40 * scale;
+const scaleItemsY = 55 * scale;
 
 class NimGame {
     constructor(nimAI, level) {
@@ -30,6 +32,8 @@ class NimGame {
         this.newBoard = this.giveUp.bind(this);
         this.nextLevel = this.nextLevel.bind(this);
         this.newGame = this.newGame.bind(this);
+        this.rules = this.rules.bind(this);
+        this.closeHelp = this.closeHelp.bind(this);
     }
 
     initFlags() {
@@ -260,56 +264,66 @@ class NimGame {
     redrawButtons() { //manager
         console.log("redrawing buttons");
         removeElements();
-        const buttonsOffset = 8;
-        
-        const buttonsY = 55;
-        let currentOffset = buttonsOffset;
+        let currentOffset = 8;
+
+        // 980 for help button
 
         if (!this.gameStarted) {
-            this.startButton = createButton('Start');
-            this.startButton.position(currentOffset, 55);
-            this.startButton.mousePressed(this.startGame);
-            
+            this.startButton = this.createButton('Start', currentOffset, this.startGame);
             currentOffset = this.calculateButtonOffset(this.startButton);
         }
 
         if (this.gameStarted && this.isFirstTurn) {
-            this.aiFirstButton = createButton('Skip');
-            this.aiFirstButton.position(currentOffset, buttonsY);
-            this.aiFirstButton.mousePressed(this.skipTurn);
-
+            this.aiFirstButton = this.createButton('Skip', currentOffset, this.skipTurn);
             currentOffset = this.calculateButtonOffset(this.aiFirstButton);
         }
-        
-        this.newGameButton = createButton('New game');
-        this.newGameButton.position(currentOffset, buttonsY);
-        this.newGameButton.mousePressed(this.newGame);
 
+        this.newGameButton = this.createButton('NewGame', currentOffset, this.newGame);
         currentOffset = this.calculateButtonOffset(this.newGameButton);
         
 
         if (this.gameStarted && this.hasPoppedThisTurn) {
-            this.endTurnButton = createButton('End Turn');
-            this.endTurnButton.position(currentOffset, buttonsY);
-            this.endTurnButton.mousePressed(this.endTurn);
-
+            this.endTurnButton = this.createButton('End Turn', currentOffset, this.endTurn);
             currentOffset = this.calculateButtonOffset(this.endTurnButton);
         }
 
         if (this.gameEnded && this.playerWon) {
-            this.nextLevelButton = createButton('Next Level');
-            this.nextLevelButton.position(currentOffset, buttonsY);
-            this.nextLevelButton.mousePressed(this.nextLevel);
-
+            this.nextLevelButton = this.createButton('Next Level', currentOffset, this.nextLevel);
             currentOffset = this.calculateButtonOffset(this.nextLevelButton);
         }
         else if (this.gameEnded && !this.playerWon) {
-            this.tryAgainButton = createButton('Try again');
-            this.tryAgainButton.position(currentOffset, buttonsY);
-            this.tryAgainButton.mousePressed(this.tryAgain);
-
+            this.tryAgainButton = this.createButton('Try Again', currentOffset, this.tryAgain);
             currentOffset = this.calculateButtonOffset(this.tryAgainButton);
         }
+
+        this.rulesButton = this.createButton('Rules', currentOffset, this.rules);
+        currentOffset = this.calculateButtonOffset(this.rulesButton);
+    }
+
+    rules() {
+        let modal = select('.rules-modal');
+        modal.style('display', 'block');
+
+        let closeRulesBtn = select('.close');
+        closeRulesBtn.mouseClicked(this.closeHelp)
+    }
+
+    closeHelp() {
+        let modal = select('.rules-modal');
+        modal.style('display', 'none');
+    }
+    
+    createButton(name, offset, func) {
+        const buttonsXSize = 80 * scale;
+        const buttonsYSize = 21 * scale;
+        const buttonsY = 120;
+
+        const btn = createButton(name);
+        btn.position(offset, buttonsY);
+        btn.mouseClicked(func);
+        btn.size(buttonsXSize, buttonsYSize);
+
+        return btn;
     }
 
     calculateButtonOffset(btn) {

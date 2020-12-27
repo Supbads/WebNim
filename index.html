@@ -2,14 +2,31 @@
 <html>
 <head>
     <title>Nim</title>
-</head>
-<body>
-    <h1>Nim</h1>
+    <link rel="stylesheet" href="style.css">
     <script src="nimAi.js"></script>
     <script src="nimGame.js"></script>
     <script src="nimDot.js"></script>
     <script src="main.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/p5.min.js"></script>
-   
-</body>	
+</head>
+<body>
+    <div class="logo">
+        <img src="nimLogo.png" alt="Nim">
+    </div>
+    <div class="rules-modal">
+        <div class="modal-header">
+            <div class="modal-title">How to Play</div>
+            <button class="close">×</button>
+        </div>
+        <div class="modal-body">
+            <div>
+                <p>Take turns removing objects from a row. Try to make your oponent take the last object.</p>
+                <p>Note you can't remove objects from more than one row at a time.</p>
+                <p>You may choose if you would like to go first or second.</p>
+
+            </div>
+        </div>
+        <!--<div class="blur"></div>-->
+    </div>
+</body>
 </html>
