@@ -52,6 +52,7 @@ class NimGame {
             this.level = levelNum;
         }
         let level = this.level;
+
         let rows = 2;
 
         if (level >= 8) {
@@ -59,27 +60,41 @@ class NimGame {
         } else {
             rows = 1 + Math.floor(level / 2);
         }
+        let board = []
+        
+        //board = [0, 1, 2, 3]; // for testing purposes
+        //this.generateGameBoardFromArray(board);
+        //return;
 
-        this.gameBoard.length = 0;
         for (let row = 0; row < rows; row++) {
-            this.gameBoard[row] = [];
-
             let baseMin = Math.random() * (rows - 1) + 1;
             let levelScale = Math.pow(0.96, level * 2);
             let baseMax2 = 1 + row + (level / levelScale);
 
-            let random = Math.random() * (baseMax2 - baseMin) + baseMin;
-            let dotsToGenerate = random;
-
-            for (var i = 0; i < dotsToGenerate; i++) {
-                let dotX = itemsOffsetX + (i * scaleItemsX);
-                let dotY = itemsOffsetY + (row * scaleItemsY);
-                this.gameBoard[row].push(new NimDot(dotX, dotY));
-            }
+            let randomDotCount = Math.random() * (baseMax2 - baseMin) + baseMin;
+            board.push(randomDotCount);
         }
+
+        this.gameBoard.length = 0; // is this needed?
+        this.generateGameBoardFromArray(board);
     }
 
-    getDots() {
+    generateGameBoardFromArray(board) {
+        let gameBoard = []
+
+        for (var row = 0; row < board.length; row++) {
+            gameBoard[row] = [];
+
+            for (var i = 0; i < board[row]; i++) {
+                let dotX = itemsOffsetX + (i * scaleItemsX);
+                let dotY = itemsOffsetY + (row * scaleItemsY);
+                gameBoard[row].push(new NimDot(dotX, dotY));
+            }
+        }
+        this.gameBoard = gameBoard;
+    }
+
+    getDots() { // converts the gameBoard to a board[] of dots count
         let result = [];
 
         for (var i = 0; i < this.gameBoard.length; i++) {
@@ -139,12 +154,13 @@ class NimGame {
         return true;
     }
 
-    finishGame() { // todo gama manager
+    finishGame() { // todo game manager
         this.gameEnded = true;
         this.playerWon = !this.playerTurn;
 
         // loser is whoever turn it is in misere game mode
         console.log("game over");
+
         // todo: gameover screen
         if (this.playerWon) {
             console.log("player won");
@@ -231,6 +247,7 @@ class NimGame {
 
         if (this.hasTheGameEnded()) {
             this.finishGame();
+            this.redrawButtons();
         }
     }
 
@@ -253,6 +270,7 @@ class NimGame {
     }
 
     draw() {        
+        fill(color(246, 46, 200));
         for (var i = 0; i < this.gameBoard.length; i++) {
             for (var j = 0; j < this.gameBoard[i].length; j++) {
                 let dot = this.gameBoard[i][j];
@@ -266,23 +284,21 @@ class NimGame {
         removeElements();
         let currentOffset = 8;
 
-        // 980 for help button
-
         if (!this.gameStarted) {
             this.startButton = this.createButton('Start', currentOffset, this.startGame);
             currentOffset = this.calculateButtonOffset(this.startButton);
         }
 
-        if (this.gameStarted && this.isFirstTurn) {
+        if (!this.gameEnded && this.gameStarted && this.isFirstTurn) {
             this.aiFirstButton = this.createButton('Skip', currentOffset, this.skipTurn);
             currentOffset = this.calculateButtonOffset(this.aiFirstButton);
         }
 
-        this.newGameButton = this.createButton('NewGame', currentOffset, this.newGame);
+        this.newGameButton = this.createButton('New Game', currentOffset, this.newGame);
         currentOffset = this.calculateButtonOffset(this.newGameButton);
         
 
-        if (this.gameStarted && this.hasPoppedThisTurn) {
+        if (!this.gameEnded && this.gameStarted && this.hasPoppedThisTurn) {
             this.endTurnButton = this.createButton('End Turn', currentOffset, this.endTurn);
             currentOffset = this.calculateButtonOffset(this.endTurnButton);
         }
@@ -290,10 +306,6 @@ class NimGame {
         if (this.gameEnded && this.playerWon) {
             this.nextLevelButton = this.createButton('Next Level', currentOffset, this.nextLevel);
             currentOffset = this.calculateButtonOffset(this.nextLevelButton);
-        }
-        else if (this.gameEnded && !this.playerWon) {
-            this.tryAgainButton = this.createButton('Try Again', currentOffset, this.tryAgain);
-            currentOffset = this.calculateButtonOffset(this.tryAgainButton);
         }
 
         this.rulesButton = this.createButton('Rules', currentOffset, this.rules);
